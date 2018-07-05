@@ -23,7 +23,7 @@ class Order extends Model
     public function new_status()
     {
     	return $this->status()
-    				->orderBy('id','desc')
+    				->orderBy('created_at','desc')
     				->first();
     }
 
@@ -36,8 +36,13 @@ class Order extends Model
     //获取该订单包括的商品
     public function fields()
     {
-    	return $this->belongsToMany('App\Models\Field')
+    	return $this->hasMany('App\Models\Field_order')
     				->withTimestamps();
+    }
+    //获取该订单包括的 场地
+    public function places()
+    {
+        return $this->belongsToMany('App\Models\Place', 'field_order', 'order_id', 'place_id')->withTimestamps();
     }
     //该订单所属用户
     public function client()

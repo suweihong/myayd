@@ -32,6 +32,13 @@ class Field extends Model
         //该商品所属订单
         public function orders()
         {
-            return $this->belongsToMany('App\Models\Order');
+            return $this->belongsTo('App\Models\Order');
+        }
+
+        //该商品属于哪块地
+        public function place()
+        {
+            return $this->belongsTo('App\Models\Place');
+
         }
 }

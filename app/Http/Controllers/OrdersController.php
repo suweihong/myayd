@@ -109,7 +109,6 @@ class OrdersController extends Controller
                 ]); 
                     //修改账单
                 $store_id = $request->store_id;
-                $time_start = $month_start;
                 $bill = Bill::where('store_id',$store_id)->where('time_start',$month_start)->first();
                 $bill->update([
                     'total' => $bill->total + $order->total,

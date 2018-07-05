@@ -28,4 +28,10 @@ class Place extends Model
     {
     	return $this->hasMany('App\Models\Field');
     }
+
+    //获取该场地所属订单
+    public function orders()
+    {
+        return $this->belongsToMany('App\Models\Order', 'field_order', 'place_id', 'order_id')->withPivot('time','date','field_id')->withTimestamps();
+    }
 }
