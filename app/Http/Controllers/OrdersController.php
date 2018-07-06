@@ -7,6 +7,9 @@ use Illuminate\Http\Request;
 use App\Models\Order;
 use App\Models\OrderStatus;
 use App\Models\Bill;
+use App\Models\Field;
+
+
 use Excel;
 
 class OrdersController extends Controller
@@ -22,6 +25,7 @@ class OrdersController extends Controller
         dump($store_id);
         $orders = Order::where('store_id',$store_id)->orderBy('created_at','desc')->paginate(10);
         dump($orders);
+
     }
 
     /**
@@ -43,7 +47,42 @@ class OrdersController extends Controller
     //添加订单
     public function store(Request $request)
     {
-        //
+        $place_id = $request->place_id;
+        $time = $request->time;
+        $week = $request->week;
+        $date = $request->date;
+        $type_id = $request->type_id;
+        $store_id = $request->store_id;
+            //  该日期的商品
+        $field = Field::where('store_id',$store_id)->where('place_id',$place_id)->where('type_id',$type_id)->where('time',$time)->where('date',$date)->first();
+        if(!$field){
+            //该星期的商品
+            $field = Field::where('store_id',$store_id)->where('place_id',$place_id)->where('type_id',$type_id)->where('time',$time)->where('week',$week)->first();
+        }
+        $price = $field->price;//该商品的价格 
+
+        dump($price);
+
+        //生成订单
+        $order = Order::create([
+            'store_id' => $store_id,
+            'status_id' => 3,//订单状态为  已完成
+            'type_id' => $type_id,
+            'payment_id' => $request->pay_id,
+            'date' => $date, //买的 是 哪天的 商品
+            'total' => $price,
+            'collection' => $request->collection,
+            'balance' => $request->balance,
+        ]);
+                //生成订单状态的 数据
+        $order_status = OrderStatus::create([
+            'order_id' => $order->id,
+            'status_id' => 3,
+            'store_id' => $store_id,
+        ]);
+        dump($order);
+        dump($order_status);
+
     }
 
     /**
@@ -116,6 +155,8 @@ class OrdersController extends Controller
                     'balance' => $bill->balance + $order->balance,    
                 ]);
 
+                $field = $order->fields()->get();//该订单包含的商品
+
                 if($res){
                     dump(33);
                     return response()->json([
@@ -128,6 +169,9 @@ class OrdersController extends Controller
 
             }            
        }
+
+       
+        
 
     }
 

@@ -45,38 +45,21 @@ class FieldsController extends Controller
                foreach ($orders as $ke => $order) {
                     $time = $order->pivot->time;
                     $field_id = $order->pivot->field_id;
-                    // $tiem_orders[$place->id][] = array('time' => $time);
+                    $date = $order->pivot->date;
                     $order['place_id'] = $place->id;
                     $order['time'] = $time;
                     $order['field_id'] = $field_id;
+                    $order['date_time'] = $date;
                }
+               $orders = $orders->sortBy('date_time')->values()->all();
                $place_orders[$place->id][] = $orders;
               
             }
 
-        // foreach ($res as $key => $value) {
-        //     foreach ($value as $ke => $va) {
-        //        $array[$key][] = $va['time'];
-        //     }
-                
-        // }
-        //         sort($array);
-        //     dump($array);
-        // foreach ($array as $key => $value) {
-        //     foreach ($data as $k => $v) {
-        //         if ($value == $v['time']) {
-        //             $array2[] = $v;
-        //         }
-        //     }
-        // }
 
             dump($place_orders);
-            // dump($tiem_orders);
         }
 
-
-
-       
         // dump($store_id);
         // dump($type_id);
         // dump($places);
