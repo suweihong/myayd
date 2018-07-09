@@ -30,9 +30,9 @@ class Field extends Model
     	}
 
         //该商品所属订单
-        public function orders()
+         public function order()
         {
-            return $this->belongsTo('App\Models\Order');
+            return $this->belongsToMany('App\Models\Order','field_order');
         }
 
         //该商品属于哪块地

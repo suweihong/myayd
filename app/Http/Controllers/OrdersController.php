@@ -53,20 +53,22 @@ class OrdersController extends Controller
         $date = $request->date;
         $type_id = $request->type_id;
         $store_id = $request->store_id;
+        $price = $request->price;
+        $field_id = $request->field_id;
             //  该日期的商品
-        $field = Field::where('store_id',$store_id)->where('place_id',$place_id)->where('type_id',$type_id)->where('time',$time)->where('date',$date)->first();
-        if(!$field){
-            //该星期的商品
-            $field = Field::where('store_id',$store_id)->where('place_id',$place_id)->where('type_id',$type_id)->where('time',$time)->where('week',$week)->first();
-        }
-        $price = $field->price;//该商品的价格 
+        // $field = Field::where('store_id',$store_id)->where('place_id',$place_id)->where('type_id',$type_id)->where('time',$time)->where('date',$date)->first();
+        // if(!$field){
+        //     //该星期的商品
+        //     $field = Field::where('store_id',$store_id)->where('place_id',$place_id)->where('type_id',$type_id)->where('time',$time)->where('week',$week)->first();
+        // }
+        // $price = $field->price;//该商品的价格 
 
         dump($price);
 
         //生成订单
         $order = Order::create([
             'store_id' => $store_id,
-            'status_id' => 3,//订单状态为  已完成
+            'status_id' => 4,//订单状态为  已完成
             'type_id' => $type_id,
             'payment_id' => $request->pay_id,
             'date' => $date, //买的 是 哪天的 商品
@@ -77,7 +79,7 @@ class OrdersController extends Controller
                 //生成订单状态的 数据
         $order_status = OrderStatus::create([
             'order_id' => $order->id,
-            'status_id' => 3,
+            'status_id' => 4,
             'store_id' => $store_id,
         ]);
         dump($order);
@@ -94,6 +96,13 @@ class OrdersController extends Controller
     public function show(Order $order)
     {
         dump($order);
+        $fields = $orders->fields()->get();
+        foreach ($fields as $key => $field) {
+           $time = $field->pivot->time;
+           $place_num = $field->pivot->place_num;
+           $field['time'] = $time;
+           $field['place_num'] = $place_num;
+        }
     }
 
     /**
@@ -114,7 +123,7 @@ class OrdersController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    //修改订单状态
+    //修改订单状态  
     public function update(Request $request,Order $order)
     {
         $store_id = $request->store_id;
@@ -170,6 +179,7 @@ class OrdersController extends Controller
             }            
        }
 
+//订单支付完成后 修改 商品状态
        
         
 
