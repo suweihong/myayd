@@ -65,10 +65,17 @@ class OrdersController extends Controller
 
         dump($price);
 
+        //改变商品状态
+        $field = Field::find($field_id);
+        $field->update([
+            'switch' => 2,
+        ]);
+
+
         //生成订单
         $order = Order::create([
             'store_id' => $store_id,
-            'status_id' => 4,//订单状态为  已完成
+            'status_id' => 3,//订单状态为  已完成
             'type_id' => $type_id,
             'payment_id' => $request->pay_id,
             'date' => $date, //买的 是 哪天的 商品
@@ -79,7 +86,7 @@ class OrdersController extends Controller
                 //生成订单状态的 数据
         $order_status = OrderStatus::create([
             'order_id' => $order->id,
-            'status_id' => 4,
+            'status_id' => 3,
             'store_id' => $store_id,
         ]);
         dump($order);
@@ -96,13 +103,14 @@ class OrdersController extends Controller
     public function show(Order $order)
     {
         dump($order);
-        $fields = $orders->fields()->get();
+        $fields = $order->fields()->get();
         foreach ($fields as $key => $field) {
            $time = $field->pivot->time;
            $place_num = $field->pivot->place_num;
            $field['time'] = $time;
            $field['place_num'] = $place_num;
         }
+        dump($fields);
     }
 
     /**
@@ -164,7 +172,13 @@ class OrdersController extends Controller
                     'balance' => $bill->balance + $order->balance,    
                 ]);
 
-                $field = $order->fields()->get();//该订单包含的商品
+                $fields = $order->fields()->get();//该订单包含的商品
+                    //修改商品的状态为 正常
+                foreach ($fields as $key => $field) {
+                    $field->update([
+                        'switch' => '',
+                    ]);
+                }
 
                 if($res){
                     dump(33);
