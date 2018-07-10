@@ -136,67 +136,79 @@ class OrdersController extends Controller
     {
         $store_id = $request->store_id;
         $month_start = date('Y-m-01',time()); //本月的一号
-        //核销订单
-       if($order->status_id == 1){
-                //订单已核销
-          dump(111);
+        if($order->store_id != $store_id){
+            dump(00);
             return response()->json([
                 'errcode' => '2',
-                'errmsg' => '该订单已经被核销,不能再进行此操作'
+                'errmsg' => '请输入正确的订单号',
             ],200);
-       }else{
-            if($order->status_id != 3){
-                //订单状态不是 已完成
-                dump(222);
-                 return response()->json([
+        }else{
+                    //核销订单
+            if($order->status_id == 1){
+                    //订单已核销
+                dump(111);
+                return response()->json([
                     'errcode' => '2',
-                    'errmsg' => '该订单还未完成，不能进行此操作'
-                 ],200);
+                    'errmsg' => '该订单已经被核销,不能再进行此操作'
+                ],200);
             }else{
-                    //创建订单的最新状态
-                OrderStatus::create([
-                    'order_id' => $order->id,
-                    'status_id' => 1,
-                    'store_id' => $store_id,
-                ]);
-                    //修改订单的状态
-               $res = $order->update([
-                    'status_id' => '1',
-                ]); 
-                    //修改账单
-                $store_id = $request->store_id;
-                $bill = Bill::where('store_id',$store_id)->where('time_start',$month_start)->first();
-                $bill->update([
-                    'total' => $bill->total + $order->total,
-                    'collection' => $bill->collection + $order->collection,
-                    'balance' => $bill->balance + $order->balance,    
-                ]);
-
-                $fields = $order->fields()->get();//该订单包含的商品
-                    //修改商品的状态为 正常
-                foreach ($fields as $key => $field) {
-                    $field->update([
-                        'switch' => '',
-                    ]);
-                }
-
-                if($res){
-                    dump(33);
-                    return response()->json([
-                        'errcode' => '1',
-                        'errmsg' => '订单核销成功'
-                    ],200);
+                if($order->status_id != 3){
+                    //订单状态不是 已完成
+                    dump(222);
+                     return response()->json([
+                        'errcode' => '2',
+                        'errmsg' => '该订单还未完成，不能进行此操作'
+                     ],200);
                 }else{
-                    dump(44);
-                }
 
-            }            
+                        //创建订单的最新状态
+                    OrderStatus::create([
+                        'order_id' => $order->id,
+                        'status_id' => 1,
+                        'store_id' => $store_id,
+                    ]);
+                        //修改订单的状态
+                   $res = $order->update([
+                        'status_id' => '1',
+                    ]); 
+                        //修改账单
+                    $store_id = $request->store_id;
+                    $bill = Bill::where('store_id',$store_id)->where('time_start',$month_start)->first();
+                    $bill->update([
+                        'total' => $bill->total + $order->total,
+                        'collection' => $bill->collection + $order->collection,
+                        'balance' => $bill->balance + $order->balance,    
+                    ]);
+
+                    $fields = $order->fields()->get();//该订单包含的商品
+                    // dd($fields);
+                        //修改商品的状态为 正常
+                    foreach ($fields as $key => $field) {
+                        $field->update([
+                            'switch' => '',
+                        ]);
+                    }
+
+                    if($res){
+                        dump(33);
+                        return response()->json([
+                            'errcode' => '1',
+                            'errmsg' => '订单核销成功'
+                        ],200);
+                    }else{
+                        dump(44);
+                    }
+
+                }            
+           }
+
+          
        }
 
-//订单支付完成后 修改 商品状态
-       
+       //订单支付完成后 修改 商品状态
+      
         
-
+        
     }
 
     /**
