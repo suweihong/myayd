@@ -39,13 +39,14 @@ class FieldsController extends Controller
         }else{
             $places = $type->places()->where('store_id',$store_id)->orderBy('id','asc')->get();
         }
+
         if($places){
             foreach ($places as $key => $place) {
                $orders = $place->orders()->where('status_id',3)->orderBy('date','asc')->get();
                foreach ($orders as $ke => $order) {
                     $time = $order->pivot->time;
                     $field_id = $order->pivot->field_id;
-                    $date = $order->pivot->date;
+                    $date = $order->pivot->order_date;
                     $order['place_id'] = $place->id;
                     $order['time'] = $time;
                     $order['field_id'] = $field_id;
@@ -83,9 +84,13 @@ class FieldsController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
+
+        //添加场地
     public function store(Request $request)
     {
-        //
+        $store_id = $request->store_id;
+        $type_id = $request->type_id;
+
     }
 
     /**
@@ -129,8 +134,14 @@ class FieldsController extends Controller
      * @return \Illuminate\Http\Response
      */
     //删除场地
-    public function destroy($id)
+    public function destroy(Request $request,$id)
     {
-        //
+        $place = Place::find($id);
+        $place->delete();//删除场地
+        $place->fields()->delete();//删除场地对应的商品
+        return response()->json([
+            'errcode' => '1',
+            'errmsg' => '场地删除成功',
+        ],200);
     }
 }

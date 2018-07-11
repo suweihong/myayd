@@ -33,6 +33,6 @@ class Place extends Model
     public function orders()
     {
         $now = date('Y-m-d H:i:s',time()-(1*60*60));
-        return $this->belongsToMany('App\Models\Order', 'field_order', 'place_id', 'order_id')->wherePivot('date','>=',$now)->withPivot('time','date','field_id')->withTimestamps();
+        return $this->belongsToMany('App\Models\Order', 'field_order', 'place_id', 'order_id')->wherePivot('order_date','>=',$now)->withPivot('time','order_date','field_id')->withTimestamps();
     }
 }
