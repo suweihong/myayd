@@ -17,21 +17,24 @@ class LoginController extends Controller
     public function login(Request $request)
     {
     	if($request->isMethod('post')){
-    		$name = $request->name;
+    		$account = $request->account;
     		$password = $request->password;
-    		if($password == '' || $name == ''){
+    		if($password == '' || $account == ''){
+          dump(22);
     			return back()->withInput()->with('warning','请填写完整内容');
     		}else{
-    			$mp_user = MpUser::where('account',$name)->first();
+    			$mp_user = MpUser::where('account',$account)->first();
     			if(!$mp_user){
-    				
+    				dump(33);
     				return back()->withInput()->with('warning','用户名或密码不正确');
     			}else{
     				if(Hash::check($password,$mp_user->password)){
     					$store_id = $mp_user->store_id;
-    					return redirect('/');
+              dump(44);
+              dump($store_id);
+    					return redirect('/?store_id='.$store_id);
     				}else{
-    						
+    						dump(55);
     					return back()->withInput()->with('warning','用户名或密码不正确');
     				
     				}
@@ -39,8 +42,8 @@ class LoginController extends Controller
     			
     		}
     	}else{
-    		
-    		return view('login');
+    		dump(1111);
+    		// return view('login');
     	}
     }
 
