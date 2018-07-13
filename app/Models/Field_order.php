@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class Field_order extends Model
 {
     protected $table = 'field_order'; 
-    protected $fillabled = ['order_id','field_id','place_num'];
+    protected $fillable = ['order_id','field_id','place_num','place_id','time','order_date'];
      use SoftDeletes;
       // 该商品所属的订单
     public function order ()

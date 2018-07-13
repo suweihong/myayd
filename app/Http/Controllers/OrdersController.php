@@ -3,11 +3,13 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 use App\Models\Order;
 use App\Models\OrderStatus;
 use App\Models\Bill;
 use App\Models\Field;
+use App\Models\Field_order;
 
 
 use Excel;
@@ -48,49 +50,128 @@ class OrdersController extends Controller
     public function store(Request $request)
     {
         $place_id = $request->place_id;
-        $time = $request->time;
+        $place_num = $request->place_num;
+        $time = $request->time;//从几点开始
+        $long = $request->long;//定多长时间
         $week = $request->week;
         $date = $request->date;
         $type_id = $request->type_id;
         $store_id = $request->store_id;
-        $price = $request->price;
-        $field_id = $request->field_id;
-            //  该日期的商品
-        // $field = Field::where('store_id',$store_id)->where('place_id',$place_id)->where('type_id',$type_id)->where('time',$time)->where('date',$date)->first();
-        // if(!$field){
-        //     //该星期的商品
-        //     $field = Field::where('store_id',$store_id)->where('place_id',$place_id)->where('type_id',$type_id)->where('time',$time)->where('week',$week)->first();
-        // }
-        // $price = $field->price;//该商品的价格 
-
-        dump($price);
-
-        //改变商品状态
-        $field = Field::find($field_id);
-        $field->update([
-            'switch' => 2,
-        ]);
+        // $total = $request->total;
+        // $field_id = $request->field_id;
+         // dump($field_id);
 
 
-        //生成订单
+            // 连续开场地 几个 小时
+        $end_time = $time + $long;
+        $new_hours = [];
+        for ($i=$time; $i < $end_time; $i++) { 
+            array_push($new_hours,$i);//添加元素
+         }
+        foreach ($new_hours as $key => $hours) {
+           $field = Field::where('place_id',$place_id)->where('date',$date)->where('time',$hours)->first();
+           if(!$field){
+            $field = Field::where('place_id',$place_id)->where('week',$week)->where('time',$hours)->first();
+           }
+           $fields[] = $field;
+         }
+
+
+            //开启事务
+        DB::beginTransaction();
+            //改变商品状态
+        $total = 0; //订单金额
+        foreach ($fields as $key => $field) {
+            $res = $field->update([
+                'switch' => 2,
+            ]);
+            if(!$res){
+                //事务回滚
+                DB::rollBack();
+                return response()->json([
+                    'errcode' => 2,
+                    'errmsg' => '购买失败',
+                ],200);
+            }
+            $total += $field->price;
+
+        }
+
+
+
+        // 生成订单
         $order = Order::create([
             'store_id' => $store_id,
             'status_id' => 3,//订单状态为  已完成
             'type_id' => $type_id,
             'payment_id' => $request->pay_id,
             'date' => $date, //买的 是 哪天的 商品
-            'total' => $price,
+            'total' => $total,
             'collection' => $request->collection,
-            'balance' => $request->balance,
+            'balance' => $total - $request->collection,
         ]);
+  
+
+        if(!$order){
+            //回滚事务
+            DB::rollBack();
+            return response()->json([
+                'errcode' => '2',
+                'errmsg' => '购买失败',
+
+            ],200);
+        }
+
+
                 //生成订单状态的 数据
         $order_status = OrderStatus::create([
             'order_id' => $order->id,
             'status_id' => 3,
             'store_id' => $store_id,
         ]);
+
+        if(!$order_status){
+            //回滚事务
+            DB::rollBack();
+            return response()->json([
+                'errcode' => '2',
+                'errmsg' => '购买失败',
+
+            ],200);
+
+        }
+
+        foreach ($fields as $key => $field) {
+                 //order_field 表 添加数据
+            $field_order = Field_order::create([
+                'order_id' => $order->id,
+                'field_id' => $field->id,
+                'place_id' => $place_id,
+                'place_num' => $place_num,
+                'time' => $field->time,
+                'order_date' => $date,
+
+            ]);
+
+            if(!$field_order){
+                //回滚事务
+                DB::rollBack();
+                return response()->json([
+                    'errcode' => '2',
+                    'errmsg' => '购买失败',
+
+                ],200);
+
+            }
+        }
+      
+         // 提交事务
+        DB::commit();
+
+
         dump($order);
         dump($order_status);
+        dump($field_order);
 
     }
 
@@ -160,57 +241,83 @@ class OrdersController extends Controller
                         'errmsg' => '该订单还未完成，不能进行此操作'
                      ],200);
                 }else{
-
+                        //核销订单
+                        
+                    //开启事务
+                    DB::beginTransaction();
                         //创建订单的最新状态
-                    OrderStatus::create([
+                    $order_status = OrderStatus::create([
                         'order_id' => $order->id,
                         'status_id' => 1,
                         'store_id' => $store_id,
                     ]);
+                    if(!$order_status){
+                        DB::rollBack();
+                        return response()->json([
+                            'errcode' => 2,
+                            'errmsg' => '核销订单失败',
+                        ],200);
+                    }
                         //修改订单的状态
-                   $res = $order->update([
+                    $order_update = $order->update([
                         'status_id' => '1',
                     ]); 
+                    if(!$order_update){
+                        DB::rollBack();
+                        return response()->json([
+                            'errcode' => 2,
+                            'errmsg' => '核销订单失败',
+                        ],200);
+                    }
                         //修改账单
-                    $store_id = $request->store_id;
+                
                     $bill = Bill::where('store_id',$store_id)->where('time_start',$month_start)->first();
-                    $bill->update([
+                    $new_bill = $bill->update([
                         'total' => $bill->total + $order->total,
                         'collection' => $bill->collection + $order->collection,
                         'balance' => $bill->balance + $order->balance,    
                     ]);
+                    if(!$new_bill){
+                        DB::rollBack();
+                        return response()->json([
+                           'errcode' => 2,
+                           'errmsg' => '核销订单失败', 
+                        ],200);
+                    }
 
                     $fields = $order->fields()->get();//该订单包含的商品
-                    // dd($fields);
                         //修改商品的状态为 正常
                     foreach ($fields as $key => $field) {
-                        $field->update([
+                        $res = $field->update([
                             'switch' => '',
                         ]);
+                        if(!$res){
+                            DB::rollBack();
+                            return response()->json([
+                                'errcode' => 2,
+                                'errmsg' => '核销订单失败', 
+                            ],200);
+                        }
                     }
 
-                    if($res){
-                        dump(33);
-                        return response()->json([
-                            'errcode' => '1',
-                            'errmsg' => '订单核销成功'
-                        ],200);
-                    }else{
-                        dump(44);
-                    }
+                    //提交事务
+                    DB::commit();
 
-                }            
-           }
+                }
+            }
 
+        }            
           
-       }
-
-       //订单支付完成后 修改 商品状态
-      
-        
+        return response()->json([
+                'errcode' => '1',
+                'errmsg' => '订单核销成功'
+             ],200);
+                   
         
     }
 
+
+   
     /**
      * Remove the specified resource from storage.
      *

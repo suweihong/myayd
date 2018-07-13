@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+
 
 use App\Models\Store;
 use App\Models\Type;
@@ -10,6 +12,7 @@ use App\Models\Order;
 use App\Models\Place;
 use App\Models\Field_order;
 use App\Models\StoreType;
+use App\Models\Field;
 
 class FieldsController extends Controller
 {
@@ -185,9 +188,72 @@ class FieldsController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
+        //转场
     public function update(Request $request, $id)
     {
-        //
+
+        $store_id = $request->store_id;
+        $place_id1 = $request->place_id1;//正在用的场地
+        $place_id2 = $request->place_id2;//要更换的场地
+        $time = $request->time;
+        $week = $request->week;
+        $date = $request->date;
+        $field = Field::where('place_id',$place_id1)->where('time',$time)->where('date',$date)->first();//该日期的数据
+        if(!$field){
+            $field = Field::where('place_id',$place_id1)->where('time',$time)->where('week',$week)->first();//该星期的数据
+        }
+        $new_field = Field::where('place_id',$place_id2)->where('time',$time)->where('date',$date)->first();
+        if(!$new_field){
+            $new_field = Field::where('place_id',$place_id2)->where('time',$time)->where('week',$week)->first();
+        }
+        if($new_field->switch == 2){
+            dump(11);
+            return response()->json([
+                'errcode' => 2,
+                'errmsg' => '场地已被占用'
+            ],200);
+        }elseif($new_field->switch == 1){
+            dump(22);
+            return response()->json([
+                'errcode' => 2,
+                'errmsg' => '场地已关闭'
+            ],200);
+        }else{
+            DB::beginTransaction();
+            $field_update = $field->update([
+                'switch' => '',
+            ]);
+            if(!$field_update){
+                DB::rollabck();
+                dump(33);
+                return response()->json([
+                    'errcode' => 2,
+                    'errmsg' => '转场失败',
+                ],200);
+            }
+            $new_update = $new_field->update([
+                'switch' => 2,
+            ]);
+             if(!$new_update){
+                DB::rollabck();
+                dump(44);
+                return response()->json([
+                    'errcode' => 2,
+                    'errmsg' => '转场失败',
+                ],200);
+            }
+
+            //提交事务
+            DB::commit();
+
+        }
+
+        return response()->json([
+            'errcode' => 1,
+            'errmsg' => '转场成功',
+        ],200);
+        
+
     }
 
     /**
