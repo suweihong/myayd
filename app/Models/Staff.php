@@ -7,10 +7,10 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Staff extends Model
 {
-      protected $table = 'staff';
+    protected $table = 'staff';
 	use SoftDeletes;
 
-	//改员工属于哪个店铺
+	//该员工属于哪个店铺
 	 public function store()
     {
         return $this->belongsTo('App\Models\Store');

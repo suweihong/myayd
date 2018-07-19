@@ -9,7 +9,7 @@ class Order extends Model
 {
      use SoftDeletes;
      protected $dates = ['date'];
-     protected $fillable = ['client_id','store_id','status_id','total','collection','balance','payment_id','phone','date','type_id'];
+     protected $fillable = ['client_id','store_id','status_id','total','collection','balance','payment_id','phone','date','type_id','item_id'];
 
     //该订单的状态
     public function  status()

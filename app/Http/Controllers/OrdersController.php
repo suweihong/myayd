@@ -57,6 +57,7 @@ class OrdersController extends Controller
         $date = $request->date;
         $type_id = $request->type_id;
         $store_id = $request->store_id;
+        $item_id = $request->item_id;
         // $total = $request->total;
         // $field_id = $request->field_id;
          // dump($field_id);
@@ -106,6 +107,7 @@ class OrdersController extends Controller
             'type_id' => $type_id,
             'payment_id' => $request->pay_id,
             'date' => $date, //买的 是 哪天的 商品
+            'item_id' =>$item_id,
             'total' => $total,
             'collection' => $request->collection,
             'balance' => $total - $request->collection,
@@ -335,10 +337,10 @@ class OrdersController extends Controller
         $time = date('Y-m-d H-i-s');
          
         $store_id = $request->store_id;
-        $orders_list = Order::where('store_id',$store_id)->orderBy('created_at','desc')->paginate(10);
+        $orders_list = Order::where('store_id',$store_id)->orderBy('created_at','desc')->get();
         if($orders_list->isEmpty()){
-            dd(333);
-            // return back()->with('warning','搜索到的结果为空！');
+            dump(333);
+            return back()->with('warning','搜索到的结果为空！');
         }else{
             foreach ($orders_list as $key => $order) {
                $orders[$key]['id'] = $order['id'];
