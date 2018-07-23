@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 
 use App\Models\Store;
 use App\Models\Complaint;
+use App\Models\Message;
 
 class ComplaintsController extends Controller
 {
@@ -14,9 +15,13 @@ class ComplaintsController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index()
+    public function index(Request $request)
     {
-        
+        $store_id = $request->store_id;
+        $store = Store::find($store_id);
+        $mp_user_id = $store->mp_user->id;
+        $messages = Message::where('mp_user_id',0)->orwhere('mp_user_id',$mp_user_id)->orderBy('created_at','desc')->get();//公告 及 该店铺的信息
+        dump($messages);
     }
 
     /**
