@@ -31,3 +31,9 @@ Route::resource('stores','StoresController');//店铺管理
 Route::resource('fields','FieldsController');//场地管理
 Route::resource('items','ItemsController');//添加运动场地 和  品类
 Route::get('/tickets/list','ItemsController@tickets_list');//票卡类列表
+
+
+
+Auth::routes();
+
+Route::get('/home', 'HomeController@index')->name('home');

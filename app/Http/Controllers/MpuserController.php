@@ -72,6 +72,7 @@ class MpuserController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
+        //  修改密码
     public function update(Request $request,MpUser $mpuser)
     {
        $password = $request->password;
@@ -80,6 +81,13 @@ class MpuserController extends Controller
                  'password' => Hash::make($password),
             ]);
             dump($res);
+            if($res){
+                dump(11);
+                // return back()->withInput()->with('warning','密码修改成功');
+            }else{
+                dump(22);
+                 // return back()->withInput()->with('warning','密码修改失败');
+            }
        }else{
             dump(33333);
             // return back()->withInput()->with('warning','请输入六位数字');

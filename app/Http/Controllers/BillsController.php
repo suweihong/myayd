@@ -72,6 +72,7 @@ class BillsController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
+        //  确认账单
     public function update(Request $request,Bill $bill)
     {
         $check_id = $bill->check_id;

@@ -49,7 +49,7 @@ class LoginController extends Controller
 
 
 
-    //主页
+    //主页  系统概览
     public function index(Request $request)
     {
     	$store_id = $request->store_id;

@@ -28,6 +28,7 @@ class EstimatesController extends Controller
 
        $average = floor($estimate_list->pluck('average')->avg() * 100)/100;
        dump($estimate_list);
+       dump($estimates);
        dump($environment);
        dump($service );
        dump($average);

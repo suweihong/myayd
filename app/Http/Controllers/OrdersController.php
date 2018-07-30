@@ -74,7 +74,12 @@ class OrdersController extends Controller
            if(!$field){
             $field = Field::where('place_id',$place_id)->where('week',$week)->where('time',$hours)->first();
            }
-           $fields[] = $field;
+           if($field->switch == 1 || $field->switch == 2){
+                return back()->with('warning','场地已售出或关闭');
+           }else{
+                $fields[] = $field;
+           }
+           
          }
 
 
