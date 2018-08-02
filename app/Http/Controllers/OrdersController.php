@@ -10,7 +10,7 @@ use App\Models\OrderStatus;
 use App\Models\Bill;
 use App\Models\Field;
 use App\Models\Field_order;
-
+use App\Models\Payment;
 
 use Excel;
 
@@ -26,7 +26,6 @@ class OrdersController extends Controller
         $store_id = $request->store_id;
         $orders = Order::where('store_id',$store_id)->orderBy('created_at','desc')->get();
         return response()->json([
-            'errcode' => 1,
             'orders' => $orders,
         ],200);
 
@@ -37,9 +36,17 @@ class OrdersController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function create()
+        //开场地 的 页面
+    public function create(Request $request)
     {
-        //
+        $place_num = $request->place_num;
+        $payment = Payment::all();
+        return response()->json([
+            'errmsg' => '开场地的页面',
+            'place_num' => $place_num,
+            'payment' => $payment,
+        ],200);        
+
     }
 
     /**
@@ -47,8 +54,8 @@ class OrdersController extends Controller
      *
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
-     */
-    //添加订单
+     */ 
+    //添加订单  开场地
     public function store(Request $request)
     {
         $place_id = $request->place_id;
@@ -191,7 +198,7 @@ class OrdersController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-        //订单详情
+        //订单详情  (核销订单的页面)
     public function show(Order $order)
     {
         $fields = $order->fields()->get();
@@ -216,7 +223,7 @@ class OrdersController extends Controller
      */
     public function edit($id)
     {
-        //
+
     }
 
     /**
@@ -226,6 +233,7 @@ class OrdersController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
+
     //修改订单状态  
     public function update(Request $request,Order $order)
     {

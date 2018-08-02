@@ -226,7 +226,7 @@ class FieldsController extends Controller
         $store_id = $request->store_id;
         $place_id1 = $request->place_id1;//正在用的场地
         $place_id2 = $request->place_id2;//要更换的场地
-        $time = $request->time;
+        $time = $request->time;//购买时间从几点开始
         $week = $request->week;
         $date = $request->date;
         $field = Field::where('place_id',$place_id1)->where('time',$time)->where('date',$date)->first();//该日期的数据

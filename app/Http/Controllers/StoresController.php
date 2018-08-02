@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 use App\Models\Store;
 use App\Models\Store_img;
@@ -76,17 +77,23 @@ class StoresController extends Controller
      */
     public function update(Request $request,Store $store)
     {
+
         $time = now();
         $store_imgs = [];
-        $imgs = ['/d.img','/e.img','/f.img'];
+        $imgs = $request->imgs;
+        $imgs = ['we.img','ee.img'];
 
         if(!$request->title || !$request->address || !$request->map || !$request->phone || !$request->introduction){
-            dump(111);
-            // return back()->withInput()->with('warning','请填写完整内容');
+            return response()->json([
+                'errcode' => 2,
+                'errmsg' => '请填写完整内容',
+            ],200);
 
         }else{
+                //开启事务
+            DB::beginTransaction();
              //修改店铺基本信息
-            $store->update([
+            $store_update = $store->update([
                 // 'neighbourhood_id' => $request->neighbourhood_id,
                 'title' => $request->title,
                 'address' => $request->address,
@@ -96,11 +103,28 @@ class StoresController extends Controller
                 'introduction' => $request->introduction,
                 ]);
 
+            if(!$store_update){
+                    //事务回滚
+                DB::rollBack();
+                return response()->json([
+                    'errcode' => 2,
+                    'errmsg' => '修改失败',
+                ],200);
+            }
+
             //修改店内实拍图
             $imgss = $store->imgs;
             if(!$imgss->isEmpty()){
                 foreach($imgss as $img){
-                    $img->delete();
+                    $img_delete = $img->delete();
+                    if(!$img_delete){
+                            //  事务回滚
+                        DB::rollBack();
+                        return response()->json([
+                            'errcode' => 2,
+                            'errmsg' => '照片删除失败',
+                        ],200);
+                    }
                 }
             }
             foreach ($imgs as $key => $img) {
@@ -108,17 +132,25 @@ class StoresController extends Controller
                $store_imgs[$key]['img'] = $img;
                $store_imgs[$key]['created_at'] = $time;
             }
-            $store_imgs = Store_img::insert($store_imgs);
+            $imgs_insert = Store_img::insert($store_imgs);
 
-            if($store_imgs){
-                dump(22);
-               // session()->flash('success','修改成功');
-               // return redirect(route('stores.index'));
-            }else{
-                dump(333);
-               // session()->flash('warning','修改失败');
-               // return redirect(route('stores.edit',$store->id));
+            if(!$imgs_insert){
+                    //事务回滚
+                DB::rollBack();                
+                return response()->json([
+                    'errcode' => 2,
+                    'errmsg' => '修改失败',
+                ],200);
             }
+            
+
+              //提交事务
+            DB::commit();
+            
+            return response()->json([
+                'errcode' => 1,
+                'errmsg' => '修改成功',
+            ],200);
         }
 
     }

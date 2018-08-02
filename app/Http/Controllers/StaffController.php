@@ -19,7 +19,9 @@ class StaffController extends Controller
         $store_id = $request->store_id;
         $store = Store::find($store_id);
         $staffs = $store->staffs()->get();
-        dump($staffs);
+        return response()->json([
+            'staffs' => $staffs,
+        ],200);
     }
 
     /**
