@@ -24,9 +24,11 @@ class OrdersController extends Controller
     public function index(Request $request)
     {
         $store_id = $request->store_id;
-        dump($store_id);
-        $orders = Order::where('store_id',$store_id)->orderBy('created_at','desc')->paginate(10);
-        dump($orders);
+        $orders = Order::where('store_id',$store_id)->orderBy('created_at','desc')->get();
+        return response()->json([
+            'errcode' => 1,
+            'orders' => $orders,
+        ],200);
 
     }
 
@@ -58,10 +60,7 @@ class OrdersController extends Controller
         $type_id = $request->type_id;
         $store_id = $request->store_id;
         $item_id = $request->item_id;
-        // $total = $request->total;
-        // $field_id = $request->field_id;
-         // dump($field_id);
-
+       
 
             // 连续开场地 几个 小时
         $end_time = $time + $long;
@@ -75,7 +74,10 @@ class OrdersController extends Controller
             $field = Field::where('place_id',$place_id)->where('week',$week)->where('time',$hours)->first();
            }
            if($field->switch == 1 || $field->switch == 2){
-                return back()->with('warning','场地已售出或关闭');
+                return response()->json([
+                    'errcode' => 2,
+                    'errmsg' => '场地已售出或关闭',
+                ],200);
            }else{
                 $fields[] = $field;
            }
@@ -175,10 +177,11 @@ class OrdersController extends Controller
          // 提交事务
         DB::commit();
 
+        return response()->json([
+                    'errcode' => '1',
+                    'errmsg' => '购买成功',
 
-        dump($order);
-        dump($order_status);
-        dump($field_order);
+                ],200);
 
     }
 
@@ -188,9 +191,9 @@ class OrdersController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
+        //订单详情
     public function show(Order $order)
     {
-        dump($order);
         $fields = $order->fields()->get();
         foreach ($fields as $key => $field) {
            $time = $field->pivot->time;
@@ -198,7 +201,11 @@ class OrdersController extends Controller
            $field['time'] = $time;
            $field['place_num'] = $place_num;
         }
-        dump($fields);
+        return response()->json([
+            'errcode' => 1,
+            'order' => $order,
+            'fields' => $fields,
+        ],200);
     }
 
     /**
@@ -225,7 +232,6 @@ class OrdersController extends Controller
         $store_id = $request->store_id;
         $month_start = date('Y-m-01',time()); //本月的一号
         if($order->store_id != $store_id){
-            dump(00);
             return response()->json([
                 'errcode' => '2',
                 'errmsg' => '请输入正确的订单号',
@@ -234,7 +240,6 @@ class OrdersController extends Controller
                     //核销订单
             if($order->status_id == 1){
                     //订单已核销
-                dump(111);
                 return response()->json([
                     'errcode' => '2',
                     'errmsg' => '该订单已经被核销,不能再进行此操作'
@@ -242,7 +247,6 @@ class OrdersController extends Controller
             }else{
                 if($order->status_id != 3){
                     //订单状态不是 已完成
-                    dump(222);
                      return response()->json([
                         'errcode' => '2',
                         'errmsg' => '该订单还未完成，不能进行此操作'
@@ -344,8 +348,10 @@ class OrdersController extends Controller
         $store_id = $request->store_id;
         $orders_list = Order::where('store_id',$store_id)->orderBy('created_at','desc')->get();
         if($orders_list->isEmpty()){
-            dump(333);
-            return back()->with('warning','搜索到的结果为空！');
+            return response()->json([
+                'errcode' => 2,
+                'errmsg' => '搜索到的结果为空！',
+            ],200);
         }else{
             foreach ($orders_list as $key => $order) {
                $orders[$key]['id'] = $order['id'];

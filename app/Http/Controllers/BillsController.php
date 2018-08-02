@@ -19,7 +19,11 @@ class BillsController extends Controller
     {
         $store_id = $request->store_id;
         $bills = Bill::where('store_id',$store_id)->orderBy('balance','desc')->get();
-        dump($bills);
+        // dump($bills);
+        return response()->json([
+            'errcode' => 1,
+            'bills' => $bills,
+        ],200);
     }
 
     /**
@@ -111,8 +115,10 @@ class BillsController extends Controller
         $bills_list = Bill::where('store_id',$store_id)->orderBy('balance','desc')->get();
 
         if($bills_list->isEmpty()){
-            dd(333);
-            return back()->with('warning','搜索的结果为空');
+            return response()->json([
+                'errcode' => 2,
+                'errmsg' => '搜索的结果为空',
+            ],200);
         }else{
             foreach ($bills_list as $key => $bill) {
                 $bills[$key]['id'] = $key+1;

@@ -56,7 +56,7 @@ class ItemsController extends Controller
         //票卡列表
     public function tickets_list(Request $request)
     {
-        session_start();
+
         $store_id = $request->store_id;
         $store = Store::find($store_id);
 
@@ -77,8 +77,13 @@ class ItemsController extends Controller
         }
         //读取所有票卡
         $tickets = Field::where('store_id',$store_id)->where('type_id',$type_id)->where('item_id',2)->orderBy('created_at','asc')->get();
-            dump($tickets);
-        // return view('sale.ticket',compact('store','type_id','types','tickets'));
+           
+            return response()->json([
+                'store' => $store,
+                'type_id' => $type_id,
+                'types' => $types,
+                'tickets' => $tickets,
+            ],200);
     }
 
 

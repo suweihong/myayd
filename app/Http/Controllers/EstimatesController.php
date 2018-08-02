@@ -16,22 +16,27 @@ class EstimatesController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
+
+    //评价列表
     public function index(Request $request)
     {
        $store_id = $request->store_id;
        $store = Store::find($store_id);
        $estimate_list = $store->estimates;
-       $estimates = $store->estimates()->orderBy('created_at','desc')->paginate(1);
+       $estimates = $store->estimates()->orderBy('created_at','desc')->get();
        $environment = floor($estimate_list->pluck('environment')->avg() * 100)/100;
 
        $service = floor($estimate_list->pluck('service')->avg() * 100)/100;
 
        $average = floor($estimate_list->pluck('average')->avg() * 100)/100;
-       dump($estimate_list);
-       dump($estimates);
-       dump($environment);
-       dump($service );
-       dump($average);
+       return response()->json([
+            'errcode' => 1,
+            'estimates' => $estimates,
+            'environment' => $environment,
+            'service' => $service,
+            'average' => $average,
+       ],200);
+
     }
 
     /**

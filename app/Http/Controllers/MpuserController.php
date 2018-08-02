@@ -15,11 +15,15 @@ class MpuserController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
+        //修改密码的页面
     public function index(Request $request)
     {
         $store_id = $request->store_id;
-        $mp_user = MpUser::where('store_id',$store_id)->first()->account;
-        dump($mp_user);
+        $mp_user = MpUser::where('store_id',$store_id)->first();
+        return response()->json([
+            'errcode' => 1,
+            'mp_user' => $mp_user,
+        ],200);
     }
 
     /**
@@ -75,22 +79,28 @@ class MpuserController extends Controller
         //  修改密码
     public function update(Request $request,MpUser $mpuser)
     {
+
        $password = $request->password;
        if(preg_match("/^[\d]{6}$/",$password)){
             $res = $mpuser->update([
                  'password' => Hash::make($password),
             ]);
-            dump($res);
             if($res){
-                dump(11);
-                // return back()->withInput()->with('warning','密码修改成功');
+               return response()->json([
+                    'errcode' => 1,
+                    'errmsg' => '密码修改成功',
+               ],200);
             }else{
-                dump(22);
-                 // return back()->withInput()->with('warning','密码修改失败');
+                return response()->json([
+                    'errcode' => 2,
+                    'errmsg' => '密码修改失败',
+                ],200);
             }
        }else{
-            dump(33333);
-            // return back()->withInput()->with('warning','请输入六位数字');
+            return response()->json([
+                    'errcode' => 2,
+                    'errmsg' => '请输入六位数字',
+               ],200);
        }
        
     }

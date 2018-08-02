@@ -13,37 +13,52 @@ use App\Models\Bill;
 
 class LoginController extends Controller
 {
-	//登录
+  //登录
     public function login(Request $request)
     {
     	if($request->isMethod('post')){
     		$account = $request->account;
     		$password = $request->password;
+
     		if($password == '' || $account == ''){
-          dump(22);
-    			return back()->withInput()->with('warning','请填写完整内容');
+          return response()->json([
+                ' errcode' => 2,
+                'errmsg' => '请填写完整内容',
+              ],200);
     		}else{
     			$mp_user = MpUser::where('account',$account)->first();
     			if(!$mp_user){
-    				dump(33);
-    				return back()->withInput()->with('warning','用户名或密码不正确');
+    				return response()->json([
+                ' errcode' => 2,
+                'errmsg' => '用户名或密码不正确',
+              ],200);
     			}else{
     				if(Hash::check($password,$mp_user->password)){
     					$store_id = $mp_user->store_id;
-              dump(44);
-              dump($store_id);
-    					return redirect('/?store_id='.$store_id);
+             
+              // dump(44);
+              // dump($store_id);
+    					// return redirect('/?store_id='.$store_id);
+              return response()->json([
+                  'errcode' => 1,
+                  'store_id' => $store_id;
+              ],200);
     				}else{
-    						dump(55);
-    					return back()->withInput()->with('warning','用户名或密码不正确');
+              return response()->json([
+                ' errcode' => 2,
+                'errmsg' => '用户名或密码不正确',
+              ],200);
     				
     				}
     			}
     			
     		}
     	}else{
-    		dump(1111);
-    		// return view('login');
+    		// dump(1111);
+    		return response()->json([
+          ' errcode' => 2,
+          'errmsg' => '跳转登录页',
+        ],200);
     	}
     }
 
@@ -52,13 +67,17 @@ class LoginController extends Controller
     //主页  系统概览
     public function index(Request $request)
     {
+
     	$store_id = $request->store_id;
+       // dump($store_id);
         //消息动态 最近一个月的
           $today = date('Y-m-d H:i:s');
           $date = date('Y-m-d H:i:s',strtotime('today') - 2592000);
-          $estimates = Estimate::where('store_id',$store_id)->whereBetween('created_at',[$date,$today])
-                                    ->orderBy('created_at','desc')
-                                    ->get();
+          $estimates = Estimate::where('store_id',$store_id)
+                                ->where('check_id',6)
+                                ->whereBetween('created_at',[$date,$today])
+                                ->orderBy('created_at','desc')
+                                ->get();
 
             // dump($estimates);
 
@@ -115,10 +134,19 @@ class LoginController extends Controller
               $m_total = $orders->sum();
               $m_avg = floor($orders->avg()*100)/100;
 
-              dump($m_total);
-              dump($m_avg);
+              // dump($m_total);
+              // dump($m_avg);
           }
 
-    	// return view('index');
+    	return response()->json([
+        'errcode' => 1,
+        'estimates' => $estimates,
+        'num_x' => $num_x,
+        'num_h' => $num_h,
+        'num_t' => $num_t,
+        't_total' => $t_total,
+        't_avg' => $t_avg,
+
+      ],200);
     }
 }

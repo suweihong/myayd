@@ -29,11 +29,7 @@ Route::get('export','OrdersController@export');//导出订单
 Route::resource('staffs','StaffController');//员工管理
 Route::resource('stores','StoresController');//店铺管理
 Route::resource('fields','FieldsController');//场地管理
+Route::get('/trans/field','FieldsController@trans_field');//转场的页面
 Route::resource('items','ItemsController');//添加运动场地 和  品类
 Route::get('/tickets/list','ItemsController@tickets_list');//票卡类列表
 
-
-
-Auth::routes();
-
-Route::get('/home', 'HomeController@index')->name('home');

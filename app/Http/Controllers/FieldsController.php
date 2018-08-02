@@ -21,6 +21,7 @@ class FieldsController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
+        //工作台列表
     public function index(Request $request)
     {
         $store_id = $request->store_id;
@@ -44,12 +45,10 @@ class FieldsController extends Controller
             $places = $type->places()->where('store_id',$store_id)->orderBy('id','asc')->get();
         }
 
-
         if($places){
             foreach ($places as $key => $place) {
                $orders = $place->orders()->where('status_id',3)->orderBy('date','asc')->get();
-                $order = $place->orders()->where('status_id',3)->orderBy('date','asc')->first();
-               
+
                foreach ($orders as $ke => $order) {
                     $time = $order->pivot->time;
                     $field_id = $order->pivot->field_id;
@@ -61,19 +60,22 @@ class FieldsController extends Controller
                }
 
                $orders = $orders->sortBy('date_time')->values()->all();
-               // $orders = $orders[0];//只获取一条数据
-               $place_orders[$place->id][] = $orders;
+               $place_orders[$place->id] = $orders[0];//只获取一条数据
+               // $place_orders[$place->id] = $orders;
               
             }
 
-
-            dump($place_orders);
+            // dump($place_orders);
+        }else{
+            $place_orders = [];
         }
 
-        // dump($store_id);
-        // dump($type_id);
-        // dump($places);
-        // dump($types);
+        return response()->json([
+            'places' => $places,
+            'place_orders' => $place_orders,
+        ],200);
+
+       
 
     }
 
@@ -188,6 +190,44 @@ class FieldsController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
+        //转场的页面
+    public function trans_field()
+    {
+        $store_id = $request->store_id;
+        $store = Store::find($store_id);
+        $type_id = $request->type_id;
+        $item_id = $request->item_id ?? 1;
+        $pay_id = $request->pay_id;
+        $time = $request->time;
+        // $types = $store->types()->where('item_id',$item_id)->get(); //该店的运动品类 
+
+        // if(!$type_id){
+        //     if(!$store->types()->get()->isEmpty()){
+        //         $type_id = $store->types()->first()->id;
+        //     }else{
+        //         $type_id = 0;
+        //     }
+        // }
+
+        $type = Type::find($type_id);
+        if($type == null){
+            $places = [];
+        }else{
+            $places = $type->places()->where('store_id',$store_id)->orderBy('id','asc')->get();
+        }
+
+        return response()->json([
+            'places' => $places,
+            'pay_id' => $pay_id,
+            'time' => $time,
+        ],200);
+
+
+    }
+
+
+
+
         //转场
     public function update(Request $request, $id)
     {
@@ -207,13 +247,11 @@ class FieldsController extends Controller
             $new_field = Field::where('place_id',$place_id2)->where('time',$time)->where('week',$week)->first();
         }
         if($new_field->switch == 2){
-            dump(11);
             return response()->json([
                 'errcode' => 2,
                 'errmsg' => '场地已被占用'
             ],200);
         }elseif($new_field->switch == 1){
-            dump(22);
             return response()->json([
                 'errcode' => 2,
                 'errmsg' => '场地已关闭'
@@ -225,7 +263,6 @@ class FieldsController extends Controller
             ]);
             if(!$field_update){
                 DB::rollabck();
-                dump(33);
                 return response()->json([
                     'errcode' => 2,
                     'errmsg' => '转场失败',
@@ -236,7 +273,6 @@ class FieldsController extends Controller
             ]);
              if(!$new_update){
                 DB::rollabck();
-                dump(44);
                 return response()->json([
                     'errcode' => 2,
                     'errmsg' => '转场失败',
