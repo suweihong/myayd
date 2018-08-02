@@ -191,7 +191,7 @@ class FieldsController extends Controller
      * @return \Illuminate\Http\Response
      */
         //转场的页面
-    public function trans_field()
+    public function trans_field(Request $request)
     {
         $store_id = $request->store_id;
         $store = Store::find($store_id);
@@ -199,15 +199,6 @@ class FieldsController extends Controller
         $item_id = $request->item_id ?? 1;
         $pay_id = $request->pay_id;
         $time = $request->time;
-        // $types = $store->types()->where('item_id',$item_id)->get(); //该店的运动品类 
-
-        // if(!$type_id){
-        //     if(!$store->types()->get()->isEmpty()){
-        //         $type_id = $store->types()->first()->id;
-        //     }else{
-        //         $type_id = 0;
-        //     }
-        // }
 
         $type = Type::find($type_id);
         if($type == null){
